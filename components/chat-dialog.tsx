@@ -1,6 +1,7 @@
 import { ChatColors } from '@/constants/chat-styles';
 import { generateResponse } from '@/services/agent-response-service';
 import { detectBJJRelevance } from '@/services/bjj-detection-service';
+import { generateTechniqueCoachResponse } from '@/services/technique-coach-service';
 import { Message } from '@/types/chat';
 import { generateMessageId } from '@/utils/message-utils';
 import { useRef, useState } from 'react';
@@ -30,7 +31,7 @@ export function ChatDialog() {
 
   const processAgentResponse = async (userText: string, userMessageId: string) => {
     try {
-      // Detect BJJ relevance
+      // Detect BJJ relevance (shared detection service)
       const score = await detectBJJRelevance(userText);
       
       // If not BJJ-related (score < 50), show informative message
@@ -45,53 +46,106 @@ export function ChatDialog() {
         return;
       }
       
-      // Add loading indicator
-      const loadingId = generateMessageId();
-      const loadingMessage: Message = {
-        id: loadingId,
+      // Technique coach processing (first)
+      const techniqueLoadingId = generateMessageId();
+      const techniqueLoadingMessage: Message = {
+        id: techniqueLoadingId,
         text: '',
         sender: 'other',
         isLoading: true,
-        agentType: 'sports-science'
+        agentType: 'technique-coach'
       };
-      setMessages(prev => [...prev, loadingMessage]);
+      setMessages(prev => [...prev, techniqueLoadingMessage]);
       
       try {
-        // Generate response with timeout handling
-        const responseText = await Promise.race([
-          generateResponse(userText),
+        // Generate technique coach response with timeout handling
+        const techniqueResponseText = await Promise.race([
+          generateTechniqueCoachResponse(userText),
           new Promise<string>((_, reject) => {
             setTimeout(() => reject(new Error('Timeout')), 10000);
           })
         ]);
         
-        // Remove loading indicator and add response
+        // Remove loading indicator and add technique coach response
         setMessages(prev => {
-          const withoutLoading = prev.filter(m => m.id !== loadingId);
+          const withoutLoading = prev.filter(m => m.id !== techniqueLoadingId);
           return [...withoutLoading, {
             id: generateMessageId(),
-            text: responseText,
+            text: techniqueResponseText,
             sender: 'other',
-            agentType: 'sports-science',
+            agentType: 'technique-coach',
             bjjRelevanceScore: score
           }];
         });
+        
+        // Trigger science coach response after technique coach completes
+        triggerScienceCoachResponse(userText, score);
       } catch (error) {
-        // Handle timeout or generation error
+        // Handle technique coach timeout or generation error
         setMessages(prev => {
-          const withoutLoading = prev.filter(m => m.id !== loadingId);
+          const withoutLoading = prev.filter(m => m.id !== techniqueLoadingId);
           return [...withoutLoading, {
             id: generateMessageId(),
             text: 'Response timeout. Please try again.',
             sender: 'other',
             isSystemMessage: true,
-            agentType: 'sports-science'
+            agentType: 'technique-coach'
           }];
         });
+        
+        // Still trigger science coach response on technique coach failure/timeout
+        triggerScienceCoachResponse(userText, score);
       }
     } catch (error) {
       // Silently handle detection errors
       console.error('BJJ detection error:', error);
+    }
+  };
+
+  const triggerScienceCoachResponse = async (userText: string, score: number) => {
+    // Add loading indicator for science coach
+    const scienceLoadingId = generateMessageId();
+    const scienceLoadingMessage: Message = {
+      id: scienceLoadingId,
+      text: '',
+      sender: 'other',
+      isLoading: true,
+      agentType: 'sports-science'
+    };
+    setMessages(prev => [...prev, scienceLoadingMessage]);
+    
+    try {
+      // Generate science coach response with timeout handling
+      const scienceResponseText = await Promise.race([
+        generateResponse(userText),
+        new Promise<string>((_, reject) => {
+          setTimeout(() => reject(new Error('Timeout')), 10000);
+        })
+      ]);
+      
+      // Remove loading indicator and add science coach response
+      setMessages(prev => {
+        const withoutLoading = prev.filter(m => m.id !== scienceLoadingId);
+        return [...withoutLoading, {
+          id: generateMessageId(),
+          text: scienceResponseText,
+          sender: 'other',
+          agentType: 'sports-science',
+          bjjRelevanceScore: score
+        }];
+      });
+    } catch (error) {
+      // Handle science coach timeout or generation error
+      setMessages(prev => {
+        const withoutLoading = prev.filter(m => m.id !== scienceLoadingId);
+        return [...withoutLoading, {
+          id: generateMessageId(),
+          text: 'Response timeout. Please try again.',
+          sender: 'other',
+          isSystemMessage: true,
+          agentType: 'sports-science'
+        }];
+      });
     }
   };
 
