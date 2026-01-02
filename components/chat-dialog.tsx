@@ -1,12 +1,12 @@
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
-import { useRef, useState } from 'react';
+import { ChatColors } from '@/constants/chat-styles';
+import { generateResponse } from '@/services/agent-response-service';
+import { detectBJJRelevance } from '@/services/bjj-detection-service';
 import { Message } from '@/types/chat';
 import { generateMessageId } from '@/utils/message-utils';
-import { MessageItem } from './message-item';
+import { useRef, useState } from 'react';
+import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import { MessageInput } from './message-input';
-import { ChatColors } from '@/constants/chat-styles';
-import { detectBJJRelevance } from '@/services/bjj-detection-service';
-import { generateResponse } from '@/services/agent-response-service';
+import { MessageItem } from './message-item';
 
 export function ChatDialog() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -33,8 +33,14 @@ export function ChatDialog() {
       // Detect BJJ relevance
       const score = await detectBJJRelevance(userText);
       
-      // If not BJJ-related (score < 50), silently skip
+      // If not BJJ-related (score < 50), show informative message
       if (score < 50) {
+        setMessages(prev => [...prev, {
+          id: generateMessageId(),
+          text: '我只能回答巴西柔术相关问题',
+          sender: 'other',
+          isSystemMessage: true
+        }]);
         return;
       }
       

@@ -28,7 +28,7 @@ This specification MUST comply with the following constitutional principles:
 - Automatic agent response generation when user sends a message
 - Brazilian Jiu-Jitsu (BJJ) question detection and validation
 - Sports science explanations for BJJ-related questions
-- Silent handling of non-BJJ questions (no response generated)
+- Informative message for non-BJJ questions ("我只能回答巴西柔术相关问题")
 - Agent response display in chat dialog as "other" party messages
 
 ### Excluded
@@ -69,10 +69,10 @@ This specification MUST comply with the following constitutional principles:
    - If an agent response exceeds 2000 characters, the system MUST truncate it and append an ellipsis ("...") to indicate truncation
 
 4. **Non-BJJ Question Handling**
-   - When a user question is NOT related to Brazilian Jiu-Jitsu (or is less than 50% BJJ-related for mixed messages), the system MUST NOT generate any agent response
-   - The system MUST NOT display any message or notification when a non-BJJ question is detected
-   - The chat dialog MUST continue to function normally, showing only the user's message
-   - The system MUST silently handle non-BJJ questions without user-visible errors or warnings
+   - When a user question is NOT related to Brazilian Jiu-Jitsu (or is less than 50% BJJ-related for mixed messages), the system MUST display an informative message: "我只能回答巴西柔术相关问题"
+   - The message MUST be displayed as a system message (isSystemMessage: true) aligned to the right side of the screen
+   - The chat dialog MUST continue to function normally after displaying the message
+   - The system MUST NOT generate an agent response for non-BJJ questions
 
 5. **Response Integration**
    - Agent responses MUST be integrated into the existing chat dialog message flow
@@ -93,7 +93,7 @@ This specification MUST comply with the following constitutional principles:
    - The transition from user message to agent response MUST feel natural and seamless
    - Users MUST be able to continue sending messages even while an agent response is being generated
    - When an agent response is being generated, the system MUST display a simple loading indicator to provide visual feedback
-   - The absence of response for non-BJJ questions MUST not confuse users or create uncertainty
+   - Non-BJJ questions receive a clear informative message explaining the system's scope
 
 3. **Reliability**
    - The system MUST handle agent processing failures gracefully without disrupting the chat interface
@@ -128,10 +128,10 @@ This specification MUST comply with the following constitutional principles:
 - [ ] When a user sends a BJJ-related question, an agent response appears in the chat dialog within 10 seconds
 - [ ] Agent responses are displayed as "other" party messages aligned to the right side of the screen
 - [ ] Agent responses provide sports science explanations relevant to the user's BJJ question
-- [ ] When a user sends a non-BJJ question, no agent response is generated or displayed
+- [ ] When a user sends a non-BJJ question, the system displays "我只能回答巴西柔术相关问题" message
 - [ ] The chat dialog continues to function normally when non-BJJ questions are sent
 - [ ] User messages appear immediately in the chat dialog regardless of agent processing status
-- [ ] Multiple user messages can be sent in sequence, with agent responses appearing for BJJ-related questions only
+- [ ] Multiple user messages can be sent in sequence, with agent responses appearing for BJJ-related questions and informative messages for non-BJJ questions
 - [ ] When multiple BJJ-related messages are sent rapidly, each message receives an independent agent response displayed in chronological order
 - [ ] Agent responses are displayed in chronological order with user messages
 - [ ] The system handles agent processing failures gracefully without disrupting the chat interface
@@ -144,13 +144,13 @@ This specification MUST comply with the following constitutional principles:
 
 1. **Functional Completeness**
    - 95% of BJJ-related questions receive appropriate sports science explanations within 10 seconds
-   - 100% of non-BJJ questions result in no agent response (silent handling)
+   - 100% of non-BJJ questions receive the informative message "我只能回答巴西柔术相关问题"
    - 100% of agent responses are displayed correctly in the chat dialog interface
 
 2. **User Experience**
    - Users can send messages and receive agent responses without perceiving any blocking or delays
    - Agent responses are relevant and helpful for at least 85% of BJJ questions
-   - Users understand that the system only responds to BJJ-related questions (no confusion about non-responses)
+   - Users understand that the system only responds to BJJ-related questions through the informative message
 
 3. **System Reliability**
    - Agent processing failures occur in less than 5% of BJJ-related questions
@@ -184,6 +184,6 @@ This specification MUST comply with the following constitutional principles:
 
 This feature extends the existing chat dialog functionality by adding intelligent agent responses. The implementation should focus on seamless integration with the existing chat interface while maintaining the user experience established in 001-chat-dialog. The BJJ question detection mechanism is critical for ensuring the agent only responds to relevant questions, maintaining a focused and useful coaching experience.
 
-The silent handling of non-BJJ questions is intentional to avoid cluttering the conversation with irrelevant responses. This design choice prioritizes user experience by only engaging when the agent can provide value.
+Non-BJJ questions receive an informative message ("我只能回答巴西柔术相关问题") to clearly communicate the system's scope to users. This design choice helps users understand the system's capabilities and prevents confusion about why certain questions don't receive detailed responses.
 
 Agent prompts should be carefully designed to ensure responses are accurate, relevant, and focused on sports science explanations rather than general BJJ advice. The prompt management system should allow for easy iteration and improvement of agent responses over time.

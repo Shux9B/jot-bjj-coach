@@ -145,3 +145,4 @@ const buttonStyle = {
 2. 阴影效果在 iOS 和 Android 上的表现可能略有不同
 3. 渐变效果需要使用 `expo-linear-gradient` 或类似的库实现，当前使用纯色作为替代
 
+
