@@ -34,7 +34,7 @@ export default function RootLayout() {
       card: Colors.light.background,
       text: Colors.light.text,
       border: Colors.light.icon,
-    },
+    }, 
   };
 
   return (
