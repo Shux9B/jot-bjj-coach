@@ -5,28 +5,84 @@ import { generateMessageId } from '@/utils/message-utils';
 import { MessageItem } from './message-item';
 import { MessageInput } from './message-input';
 import { ChatColors } from '@/constants/chat-styles';
+import { detectBJJRelevance } from '@/services/bjj-detection-service';
+import { generateResponse } from '@/services/agent-response-service';
 
 export function ChatDialog() {
   const [messages, setMessages] = useState<Message[]>([]);
   const flatListRef = useRef<FlatList<Message>>(null);
 
-  const handleSend = (text: string) => {
-    const newMessage: Message = {
+  const handleSend = async (text: string) => {
+    // Add user message immediately
+    const userMessage: Message = {
       id: generateMessageId(),
       text,
       sender: 'user'
     };
-    setMessages(prev => [...prev, newMessage]);
+    setMessages(prev => [...prev, userMessage]);
     
-    // Simulate other party response (for demo purposes)
-    setTimeout(() => {
-      const response: Message = {
-        id: generateMessageId(),
-        text: 'This is a response',
-        sender: 'other'
+    // Trigger agent processing (non-blocking)
+    processAgentResponse(text, userMessage.id).catch(error => {
+      console.error('Agent processing error:', error);
+      // Silently handle errors - don't disrupt chat flow
+    });
+  };
+
+  const processAgentResponse = async (userText: string, userMessageId: string) => {
+    try {
+      // Detect BJJ relevance
+      const score = await detectBJJRelevance(userText);
+      
+      // If not BJJ-related (score < 50), silently skip
+      if (score < 50) {
+        return;
+      }
+      
+      // Add loading indicator
+      const loadingId = generateMessageId();
+      const loadingMessage: Message = {
+        id: loadingId,
+        text: '',
+        sender: 'other',
+        isLoading: true
       };
-      setMessages(prev => [...prev, response]);
-    }, 1000);
+      setMessages(prev => [...prev, loadingMessage]);
+      
+      try {
+        // Generate response with timeout handling
+        const responseText = await Promise.race([
+          generateResponse(userText),
+          new Promise<string>((_, reject) => {
+            setTimeout(() => reject(new Error('Timeout')), 10000);
+          })
+        ]);
+        
+        // Remove loading indicator and add response
+        setMessages(prev => {
+          const withoutLoading = prev.filter(m => m.id !== loadingId);
+          return [...withoutLoading, {
+            id: generateMessageId(),
+            text: responseText,
+            sender: 'other',
+            bjjRelevanceScore: score
+          }];
+        });
+      } catch (error) {
+        // Handle timeout or generation error
+        setMessages(prev => {
+          const withoutLoading = prev.filter(m => m.id !== loadingId);
+          return [...withoutLoading, {
+            id: generateMessageId(),
+            text: 'Response timeout. Please try again.',
+            sender: 'other',
+            isSystemMessage: true
+          }];
+        });
+      }
+    } catch (error) {
+      // Silently handle detection errors
+      console.error('BJJ detection error:', error);
+    }
   };
 
   return (

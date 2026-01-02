@@ -10,7 +10,26 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Set up environment variables
+
+   Create a `.env` file in the project root and add your DashScope (阿里百炼) API key:
+
+   ```bash
+   # Create .env file
+   touch .env
+   ```
+
+   Then add the following to `.env`:
+
+   ```bash
+   EXPO_PUBLIC_DASHSCOPE_API_KEY=your_dashscope_api_key_here
+   ```
+
+   Get your API key from: https://dashscope.console.aliyun.com/
+
+   For detailed configuration options, see [ENV_SETUP.md](./ENV_SETUP.md)
+
+3. Start the app
 
    ```bash
    npx expo start

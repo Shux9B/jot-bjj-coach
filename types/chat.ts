@@ -7,5 +7,8 @@ export interface Message {
   text: string;            // Message content
   sender: 'user' | 'other'; // Message sender type
   timestamp?: number;      // Optional timestamp (not displayed per spec)
+  isLoading?: boolean;     // Optional: indicates agent is processing response
+  isSystemMessage?: boolean; // Optional: indicates system notification (e.g., timeout)
+  bjjRelevanceScore?: number; // Optional: BJJ relevance score (0-100) from detection
 }
 

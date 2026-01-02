@@ -2,6 +2,7 @@ import { ChatBorderRadius, ChatColors, ChatShadows, ChatSpacing } from '@/consta
 import { Message } from '@/types/chat';
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { LoadingIndicator } from './loading-indicator';
 
 interface MessageItemProps {
   message: Message;
@@ -10,14 +11,25 @@ interface MessageItemProps {
 export const MessageItem = memo(function MessageItem({ message }: MessageItemProps) {
   const isUser = message.sender === 'user';
   
+  // Handle loading indicator
+  if (message.isLoading) {
+    return <LoadingIndicator />;
+  }
+  
+  // Handle system messages with special styling
+  const isSystemMessage = message.isSystemMessage;
+  
   return (
     <View 
       style={[
         styles.container,
-        isUser ? styles.userMessage : styles.otherMessage
+        isUser ? styles.userMessage : styles.otherMessage,
+        isSystemMessage && styles.systemMessage
       ]}
     >
-      <Text style={styles.text}>{message.text}</Text>
+      <Text style={[styles.text, isSystemMessage && styles.systemText]}>
+        {message.text}
+      </Text>
     </View>
   );
 });
@@ -47,6 +59,14 @@ const styles = StyleSheet.create({
     color: ChatColors.textPrimary,
     fontSize: 16,
     lineHeight: 22,
+  },
+  systemMessage: {
+    backgroundColor: ChatColors.otherMessageBg,
+    opacity: 0.7,
+  },
+  systemText: {
+    fontStyle: 'italic',
+    fontSize: 14,
   },
 });
 
