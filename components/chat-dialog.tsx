@@ -39,7 +39,8 @@ export function ChatDialog() {
           id: generateMessageId(),
           text: '我只能回答巴西柔术相关问题',
           sender: 'other',
-          isSystemMessage: true
+          isSystemMessage: true,
+          agentType: 'sports-science'
         }]);
         return;
       }
@@ -50,7 +51,8 @@ export function ChatDialog() {
         id: loadingId,
         text: '',
         sender: 'other',
-        isLoading: true
+        isLoading: true,
+        agentType: 'sports-science'
       };
       setMessages(prev => [...prev, loadingMessage]);
       
@@ -70,6 +72,7 @@ export function ChatDialog() {
             id: generateMessageId(),
             text: responseText,
             sender: 'other',
+            agentType: 'sports-science',
             bjjRelevanceScore: score
           }];
         });
@@ -81,7 +84,8 @@ export function ChatDialog() {
             id: generateMessageId(),
             text: 'Response timeout. Please try again.',
             sender: 'other',
-            isSystemMessage: true
+            isSystemMessage: true,
+            agentType: 'sports-science'
           }];
         });
       }

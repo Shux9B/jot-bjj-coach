@@ -71,4 +71,12 @@ export const ChatShadows = {
   },
 };
 
+export const ChatSenderNameStyles = {
+  fontSize: 12,
+  lineHeight: 16,
+  marginBottom: 4,
+  color: ChatColors.textSecondary,
+  fontWeight: '500' as const,
+};
+
 

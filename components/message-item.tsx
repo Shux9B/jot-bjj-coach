@@ -1,5 +1,6 @@
-import { ChatBorderRadius, ChatColors, ChatShadows, ChatSpacing } from '@/constants/chat-styles';
+import { ChatBorderRadius, ChatColors, ChatSenderNameStyles, ChatShadows, ChatSpacing } from '@/constants/chat-styles';
 import { Message } from '@/types/chat';
+import { getSenderName } from '@/utils/sender-name-utils';
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LoadingIndicator } from './loading-indicator';
@@ -10,10 +11,11 @@ interface MessageItemProps {
 
 export const MessageItem = memo(function MessageItem({ message }: MessageItemProps) {
   const isUser = message.sender === 'user';
+  const senderName = getSenderName(message);
   
   // Handle loading indicator
   if (message.isLoading) {
-    return <LoadingIndicator />;
+    return <LoadingIndicator agentType={message.agentType} />;
   }
   
   // Handle system messages with special styling
@@ -26,7 +28,13 @@ export const MessageItem = memo(function MessageItem({ message }: MessageItemPro
         isUser ? styles.userMessage : styles.otherMessage,
         isSystemMessage && styles.systemMessage
       ]}
+      accessibilityLabel={senderName ? `${senderName}: ${message.text}` : message.text}
     >
+      {senderName && (
+        <Text style={[styles.senderName, isUser ? styles.userSenderName : styles.agentSenderName]}>
+          {senderName}
+        </Text>
+      )}
       <Text style={[styles.text, isSystemMessage && styles.systemText]}>
         {message.text}
       </Text>
@@ -67,6 +75,19 @@ const styles = StyleSheet.create({
   systemText: {
     fontStyle: 'italic',
     fontSize: 14,
+  },
+  senderName: {
+    fontSize: ChatSenderNameStyles.fontSize,
+    lineHeight: ChatSenderNameStyles.lineHeight,
+    marginBottom: ChatSenderNameStyles.marginBottom,
+    color: ChatSenderNameStyles.color,
+    fontWeight: ChatSenderNameStyles.fontWeight,
+  },
+  userSenderName: {
+    // User sender name aligns with left-aligned message (default)
+  },
+  agentSenderName: {
+    // Agent sender name aligns with right-aligned message (default)
   },
 });
 

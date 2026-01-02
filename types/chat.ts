@@ -10,5 +10,6 @@ export interface Message {
   isLoading?: boolean;     // Optional: indicates agent is processing response
   isSystemMessage?: boolean; // Optional: indicates system notification (e.g., timeout)
   bjjRelevanceScore?: number; // Optional: BJJ relevance score (0-100) from detection
+  agentType?: 'sports-science' | string; // Optional: agent type identifier for sender name display
 }
 
