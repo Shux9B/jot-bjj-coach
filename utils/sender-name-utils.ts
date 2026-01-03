@@ -6,6 +6,7 @@ import { Message } from '@/types/chat';
 const AGENT_NAME_MAP: Record<string, string> = {
   'sports-science': '运动健康助理',
   'technique-coach': '技术教练',
+  'tactics-coach': '战术教练',
   // Future agent types can be added here
 };
 

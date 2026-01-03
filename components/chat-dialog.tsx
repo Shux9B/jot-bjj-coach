@@ -1,6 +1,7 @@
 import { ChatColors } from '@/constants/chat-styles';
 import { generateResponse } from '@/services/agent-response-service';
 import { detectBJJRelevance } from '@/services/bjj-detection-service';
+import { generateTacticsCoachResponse } from '@/services/tactics-coach-service';
 import { generateTechniqueCoachResponse } from '@/services/technique-coach-service';
 import { Message } from '@/types/chat';
 import { generateMessageId } from '@/utils/message-utils';
@@ -78,8 +79,8 @@ export function ChatDialog() {
           }];
         });
         
-        // Trigger science coach response after technique coach completes
-        triggerScienceCoachResponse(userText, score);
+        // Trigger science coach response after technique coach completes successfully
+        triggerScienceCoachResponse(userText, score, true);
       } catch (error) {
         // Handle technique coach timeout or generation error
         setMessages(prev => {
@@ -94,7 +95,8 @@ export function ChatDialog() {
         });
         
         // Still trigger science coach response on technique coach failure/timeout
-        triggerScienceCoachResponse(userText, score);
+        // But pass false to indicate technique coach failed, so tactics coach won't be triggered
+        triggerScienceCoachResponse(userText, score, false);
       }
     } catch (error) {
       // Silently handle detection errors
@@ -102,7 +104,7 @@ export function ChatDialog() {
     }
   };
 
-  const triggerScienceCoachResponse = async (userText: string, score: number) => {
+  const triggerScienceCoachResponse = async (userText: string, score: number, techniqueCoachSucceeded: boolean) => {
     // Add loading indicator for science coach
     const scienceLoadingId = generateMessageId();
     const scienceLoadingMessage: Message = {
@@ -134,6 +136,11 @@ export function ChatDialog() {
           bjjRelevanceScore: score
         }];
       });
+      
+      // Trigger tactics coach response only if both technique coach and science coach succeeded
+      if (techniqueCoachSucceeded) {
+        triggerTacticsCoachResponse(userText, score);
+      }
     } catch (error) {
       // Handle science coach timeout or generation error
       setMessages(prev => {
@@ -144,6 +151,54 @@ export function ChatDialog() {
           sender: 'other',
           isSystemMessage: true,
           agentType: 'sports-science'
+        }];
+      });
+      // Do NOT trigger tactics coach on science coach failure/timeout
+    }
+  };
+
+  const triggerTacticsCoachResponse = async (userText: string, score: number) => {
+    // Add loading indicator for tactics coach
+    const tacticsLoadingId = generateMessageId();
+    const tacticsLoadingMessage: Message = {
+      id: tacticsLoadingId,
+      text: '',
+      sender: 'other',
+      isLoading: true,
+      agentType: 'tactics-coach'
+    };
+    setMessages(prev => [...prev, tacticsLoadingMessage]);
+    
+    try {
+      // Generate tactics coach response with timeout handling
+      const tacticsResponseText = await Promise.race([
+        generateTacticsCoachResponse(userText),
+        new Promise<string>((_, reject) => {
+          setTimeout(() => reject(new Error('Timeout')), 10000);
+        })
+      ]);
+      
+      // Remove loading indicator and add tactics coach response
+      setMessages(prev => {
+        const withoutLoading = prev.filter(m => m.id !== tacticsLoadingId);
+        return [...withoutLoading, {
+          id: generateMessageId(),
+          text: tacticsResponseText,
+          sender: 'other',
+          agentType: 'tactics-coach',
+          bjjRelevanceScore: score
+        }];
+      });
+    } catch (error) {
+      // Handle tactics coach timeout or generation error
+      setMessages(prev => {
+        const withoutLoading = prev.filter(m => m.id !== tacticsLoadingId);
+        return [...withoutLoading, {
+          id: generateMessageId(),
+          text: 'Response timeout. Please try again.',
+          sender: 'other',
+          isSystemMessage: true,
+          agentType: 'tactics-coach'
         }];
       });
     }
