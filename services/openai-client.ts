@@ -15,7 +15,6 @@ if (!apiKey) {
 // 华北2（北京）: https://dashscope.aliyuncs.com/compatible-mode/v1
 const baseURL = process.env.EXPO_PUBLIC_DASHSCOPE_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 
-debugger
 const openai = new OpenAI({
   apiKey: apiKey || '',
   baseURL: baseURL,
